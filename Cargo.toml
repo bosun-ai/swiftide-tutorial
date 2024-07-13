@@ -1,0 +1,10 @@
+[package]
+name = "swiftide-example"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.86"
+clap = { version = "4.5.9", features = ["derive"] }
+swiftide = { version = "0.6.2", features = ["qdrant", "redis", "openai"] }
+tokio = { version = "1.38.0", features = ["full"] }
