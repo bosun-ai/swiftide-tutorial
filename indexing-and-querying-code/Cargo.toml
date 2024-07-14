@@ -1,5 +1,6 @@
 [package]
-name = "swiftide-example"
+name = "indexing-and-querying-code"
+publish = false
 version = "0.1.0"
 edition = "2021"
 
