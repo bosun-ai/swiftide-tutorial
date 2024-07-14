@@ -1,12 +1,12 @@
-use std::path::PathBuf;
+use std::{path::PathBuf, str::FromStr};
 
 use anyhow::Result;
 use clap::Parser;
 use swiftide::{
     indexing::Pipeline,
-    integrations::{openai::OpenAI, qdrant::Qdrant},
+    integrations::{openai::OpenAI, qdrant::Qdrant, treesitter::SupportedLanguages},
     loaders::FileLoader,
-    transformers::{ChunkMarkdown, Embed, MetadataQAText},
+    transformers::{ChunkCode, ChunkMarkdown, Embed, MetadataQACode, MetadataQAText},
 };
 
 #[derive(Parser, Debug)]
@@ -38,6 +38,7 @@ async fn main() -> Result<()> {
         .build()?;
 
     index_markdown(&args.path, &openai, &qdrant).await?;
+    index_code(&args.language, &args.path, &openai, &qdrant).await?;
 
     Ok(())
 }
@@ -55,6 +56,33 @@ async fn index_markdown(path: &PathBuf, openai: &OpenAI, qdrant: &Qdrant) -> Res
         // embedding
         .then_in_batch(100, Embed::new(openai.clone()))
         // Finally store the embeddings into Qdrant
+        .then_store_with(qdrant.clone())
+        .run()
+        .await
+}
+
+async fn index_code(
+    language: &str,
+    path: &PathBuf,
+    openai: &OpenAI,
+    qdrant: &Qdrant,
+) -> Result<()> {
+    tracing::info!(path=?path, language, "Indexing code");
+
+    // Parse the language to a supported one by the tree-sitter integration. Clap could also do
+    // this. It's also possible to directly pass the language as string to the transformer, but we
+    // save some time by getting the extensions.
+    let language = SupportedLanguages::from_str(language)?;
+
+    Pipeline::from_loader(FileLoader::new(path).with_extensions(language.file_extensions()))
+        // Uses tree-sitter to extract best effort blocks of code. We still keep the minimum
+        // fairly high and double the chunk size
+        .then_chunk(ChunkCode::try_for_language_and_chunk_size(
+            language,
+            50..1024,
+        )?)
+        .then(MetadataQACode::new(openai.clone()))
+        .then_in_batch(100, Embed::new(openai.clone()))
         .then_store_with(qdrant.clone())
         .run()
         .await
