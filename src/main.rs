@@ -2,6 +2,7 @@ use std::path::PathBuf;
 
 use anyhow::Result;
 use clap::Parser;
+use swiftide::{indexing::Pipeline, loaders::FileLoader};
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -21,9 +22,16 @@ async fn main() -> Result<()> {
 
     let args = Args::parse();
 
-    println!("{}", args.language);
-    println!("{}", args.path.to_string_lossy());
-    println!("{}", args.query);
+    index_markdown(&args.path).await?;
 
     Ok(())
+}
+
+async fn index_markdown(path: &PathBuf) -> Result<()> {
+    tracing::info!(path=?path, "Indexing markdown");
+
+    // Loads all markdown files into the pipeline
+    Pipeline::from_loader(FileLoader::new(path).with_extensions(&[".md"]))
+        .run()
+        .await
 }
