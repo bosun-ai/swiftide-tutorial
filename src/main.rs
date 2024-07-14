@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use anyhow::Result;
 use clap::Parser;
-use swiftide::{indexing::Pipeline, loaders::FileLoader};
+use swiftide::{indexing::Pipeline, loaders::FileLoader, transformers::ChunkMarkdown};
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -32,6 +32,7 @@ async fn index_markdown(path: &PathBuf) -> Result<()> {
 
     // Loads all markdown files into the pipeline
     Pipeline::from_loader(FileLoader::new(path).with_extensions(&[".md"]))
+        .then_chunk(ChunkMarkdown::from_chunk_range(50..1024))
         .run()
         .await
 }
