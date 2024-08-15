@@ -1,0 +1,20 @@
+[package]
+name = "ragas"
+publish = false
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.86"
+clap = { version = "4.5.9", features = ["derive"] }
+swiftide = { features = [
+  "qdrant",
+  "redis",
+  "openai",
+  "tree-sitter",
+], path = "../../swiftide/swiftide" }
+tokio = { version = "1.38.0", features = ["full"] }
+tracing-subscriber = "0.3.18"
+tracing = "0.1.40"
+qdrant-client = "1.10.1"
+indoc = "2.0.5"
