@@ -16,5 +16,10 @@ swiftide = { features = [
 tokio = { version = "1.38.0", features = ["full"] }
 tracing-subscriber = "0.3.18"
 tracing = "0.1.40"
-qdrant-client = "1.10.1"
+qdrant-client = "1.11.1"
 indoc = "2.0.5"
+
+[features]
+default = ["chunk", "metadata"]
+chunk = []
+metadata = []
