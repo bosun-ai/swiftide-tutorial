@@ -8,15 +8,13 @@ use swiftide::{
         answers::Simple,
         evaluators::{self, ragas::EvaluationDataSet},
         query_transformers::{self, GenerateSubquestions},
-        states, Query,
     },
 };
 
 use std::{path::PathBuf, str::FromStr};
 
 use anyhow::{Context as _, Result};
-use clap::{Parser, ValueEnum};
-use indoc::formatdoc;
+use clap::Parser;
 use swiftide::{
     indexing::Pipeline,
     integrations::{openai::OpenAI, qdrant::Qdrant, redis::Redis, treesitter::SupportedLanguages},
@@ -28,25 +26,32 @@ const COLLECTION_NAME: &str = "swiftide-ragas";
 #[command(version, about, long_about = None)]
 struct Args {
     #[arg(short, long)]
+    /// Language of the code to index
     language: String,
 
     #[arg(short, long, default_value = "./")]
+    /// Path to the code to index
     path: PathBuf,
 
     #[command(flatten)]
     dataset: DatasetArg,
 
     #[arg(short, long, default_value = "false")]
+    /// Records answers as ground truth
     record_ground_truth: bool,
 
     #[arg(short, long)]
+    /// Output file to write the evaluation results to
     output: PathBuf,
 }
 
 #[derive(clap::Args, Debug, Clone)]
 #[group(required = true, multiple = false)]
 struct DatasetArg {
+    /// Dataset json file to load questions and ground truths from
+    #[arg(short, long, conflicts_with = "questions")]
     file: Option<PathBuf>,
+    /// List of questions to use for evaluation
     questions: Option<Vec<String>>,
 }
 
@@ -68,7 +73,7 @@ async fn main() -> Result<()> {
 
     let qdrant = Qdrant::builder()
         .vector_size(1536)
-        .collection_name("swiftide-ragas")
+        .collection_name(COLLECTION_NAME)
         .build()?;
 
     let context = Context { openai, qdrant };
@@ -103,10 +108,6 @@ async fn index_all(language: &str, path: &PathBuf, context: &Context) -> Result<
     let (mut markdown, mut code) =
         Pipeline::from_loader(FileLoader::new(path).with_extensions(&extensions))
             .with_concurrency(50)
-            .filter_cached(Redis::try_from_url(
-                "redis://localhost:6379",
-                COLLECTION_NAME,
-            )?)
             .split_by(|node| {
                 // Any errors at this point we just pass to 'markdown'
                 let Ok(node) = node else { return true };
@@ -171,7 +172,7 @@ async fn query(
 }
 
 async fn force_delete_qdrant_collection(context: &Context) -> Result<()> {
-    context
+    let _ = context
         .qdrant
         .client()
         .delete_collection(COLLECTION_NAME)
