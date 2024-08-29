@@ -2043,8 +2043,6 @@ dependencies = [
  "indoc",
  "num_cpus",
  "pin-project-lite",
- "serde",
- "serde_json",
  "swiftide-core",
  "tokio",
  "tokio-stream",
