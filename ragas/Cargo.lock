@@ -126,9 +126,9 @@ dependencies = [
 
 [[package]]
 name = "async-openai"
-version = "0.23.4"
+version = "0.24.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dc0e5ff98f9e7c605df4c88783a0439d1dc667ce86bd79e99d4164f8b0c05ccc"
+checksum = "6f7e40b158d5356b3497edb35610a408cb6339e68c91c7521bc68fbec83b2521"
 dependencies = [
  "async-convert",
  "backoff",
@@ -1091,6 +1091,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0e7465ac9959cc2b1404e8e2367b43684a6d13790fe23056cc8c6c5a6b7bcb94"
 
 [[package]]
+name = "md-5"
+version = "0.10.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d89e7ee0cfbedfc4da3340218492196241d89eefb6dab27de5df917a6d2e78cf"
+dependencies = [
+ "cfg-if",
+ "digest",
+]
+
+[[package]]
 name = "memchr"
 version = "2.7.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1382,9 +1392,9 @@ dependencies = [
 
 [[package]]
 name = "pulldown-cmark"
-version = "0.11.0"
+version = "0.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8746739f11d39ce5ad5c2520a9b75285310dbfe78c541ccf832d38615765aec0"
+checksum = "666f0f59e259aea2d72e6012290c09877a780935cc3c18b1ceded41f3890d59c"
 dependencies = [
  "bitflags",
  "memchr",
@@ -1938,7 +1948,9 @@ checksum = "13c2bddecc57b384dee18652358fb23172facb8a2c51ccc10d74c157bdea3292"
 
 [[package]]
 name = "swiftide"
-version = "0.8.0"
+version = "0.11.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0db17921bbb10f39b326959414ed6919d37ab581b540537c2f647cd5a0d3ec58"
 dependencies = [
  "swiftide-core",
  "swiftide-indexing",
@@ -1948,7 +1960,9 @@ dependencies = [
 
 [[package]]
 name = "swiftide-core"
-version = "0.8.0"
+version = "0.11.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ee009a70454d5f0fb16a21e438c3703161bbc1a083e9f48da3540b60b58b0408"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -1970,7 +1984,9 @@ dependencies = [
 
 [[package]]
 name = "swiftide-indexing"
-version = "0.8.0"
+version = "0.11.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0abd8ffaabedb0d9cd163395ce6264515d6bf8834ff065ba3c265297b087b018"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -1994,13 +2010,16 @@ dependencies = [
 
 [[package]]
 name = "swiftide-integrations"
-version = "0.8.0"
+version = "0.11.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7a46937c3fbd44fb5e011159fd21e3bd1b7d9be2e0a51c394746bb7cb6b461b6"
 dependencies = [
  "anyhow",
  "async-openai",
  "async-trait",
  "chrono",
  "derive_builder",
+ "futures-util",
  "itertools",
  "qdrant-client",
  "redis",
@@ -2024,7 +2043,9 @@ dependencies = [
 
 [[package]]
 name = "swiftide-macros"
-version = "0.8.0"
+version = "0.11.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2f895f84ff3454d94c2d64e499a5410bb29ebdea9b8df61a515a345060755f78"
 dependencies = [
  "darling",
  "proc-macro2",
@@ -2034,7 +2055,9 @@ dependencies = [
 
 [[package]]
 name = "swiftide-query"
-version = "0.8.0"
+version = "0.11.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "346a1ca8dd9f2db0edd0314fe3b2215059f76bff2091f0317593a38650194041"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2043,6 +2066,8 @@ dependencies = [
  "indoc",
  "num_cpus",
  "pin-project-lite",
+ "serde",
+ "serde_json",
  "swiftide-core",
  "tokio",
  "tokio-stream",
@@ -2090,9 +2115,9 @@ dependencies = [
 
 [[package]]
 name = "text-splitter"
-version = "0.15.0"
+version = "0.16.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ea57b83410a18a2a5d077b3248d24e1fc516d56171406c6b109d8bff242d96a3"
+checksum = "9f280573deec490e745c503ecc1d0e17104e98936eaefd7b0aa4b1422c74b317"
 dependencies = [
  "ahash",
  "auto_enums",
@@ -2544,6 +2569,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "81dfa00651efa65069b0b6b651f4aaa31ba9e3c3ce0137aaad053604ee7e0314"
 dependencies = [
  "getrandom",
+ "md-5",
+ "serde",
 ]
 
 [[package]]
