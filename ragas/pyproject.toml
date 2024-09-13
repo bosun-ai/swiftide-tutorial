@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "swiftide-ragas-example"
+version = "0.1.0"
+description = ""
+authors = ["Timon Vonk <timonv@gmail.com>"]
+readme = "README.md"
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.12"
+datasets = "^2.21.0"
+ragas = "^0.1.14"
+pandas = "^2.2.2"
+seaborn = "^0.13.2"
+matplotlib = "^3.9.2"
+
+
+[tool.poetry.group.dev.dependencies]
+jupyter = "^1.0.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
