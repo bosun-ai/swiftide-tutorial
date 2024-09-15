@@ -334,9 +334,12 @@ checksum = "8318a53db07bb3f8dca91a600466bdb3f2eaadeedfdbcf02e1accbad9271ba50"
 
 [[package]]
 name = "cc"
-version = "1.0.106"
+version = "1.1.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "066fce287b1d4eafef758e89e09d724a24808a9196fe9756b8ca90e86d0719a2"
+checksum = "b62ac837cdb5cb22e10a256099b4fc502b1dfe560cb282963a974d7abd80e476"
+dependencies = [
+ "shlex",
+]
 
 [[package]]
 name = "cfg-if"
@@ -1484,6 +1487,8 @@ dependencies = [
  "clap",
  "indoc",
  "qdrant-client",
+ "serde",
+ "serde_json",
  "swiftide",
  "tokio",
  "tracing",
@@ -1522,9 +1527,9 @@ dependencies = [
 
 [[package]]
 name = "redis"
-version = "0.26.1"
+version = "0.27.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e902a69d09078829137b4a5d9d082e0490393537badd7c91a3d69d14639e115f"
+checksum = "a7e86f5670bd8b028edfb240f0616cad620705b31ec389d55e4f3da2c38dcd48"
 dependencies = [
  "arc-swap",
  "async-trait",
@@ -1873,6 +1878,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "shlex"
+version = "1.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0fda2ff0d084019ba4d7c6f371c95d8fd75ce3524c3cb8fb653a3023f6323e64"
+
+[[package]]
 name = "signal-hook-registry"
 version = "1.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1948,9 +1959,7 @@ checksum = "13c2bddecc57b384dee18652358fb23172facb8a2c51ccc10d74c157bdea3292"
 
 [[package]]
 name = "swiftide"
-version = "0.11.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0db17921bbb10f39b326959414ed6919d37ab581b540537c2f647cd5a0d3ec58"
+version = "0.12.0"
 dependencies = [
  "swiftide-core",
  "swiftide-indexing",
@@ -1960,9 +1969,7 @@ dependencies = [
 
 [[package]]
 name = "swiftide-core"
-version = "0.11.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ee009a70454d5f0fb16a21e438c3703161bbc1a083e9f48da3540b60b58b0408"
+version = "0.12.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -1971,6 +1978,7 @@ dependencies = [
  "itertools",
  "lazy_static",
  "pin-project-lite",
+ "qdrant-client",
  "serde",
  "serde_json",
  "strum",
@@ -1984,9 +1992,7 @@ dependencies = [
 
 [[package]]
 name = "swiftide-indexing"
-version = "0.11.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0abd8ffaabedb0d9cd163395ce6264515d6bf8834ff065ba3c265297b087b018"
+version = "0.12.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2010,9 +2016,7 @@ dependencies = [
 
 [[package]]
 name = "swiftide-integrations"
-version = "0.11.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7a46937c3fbd44fb5e011159fd21e3bd1b7d9be2e0a51c394746bb7cb6b461b6"
+version = "0.12.0"
 dependencies = [
  "anyhow",
  "async-openai",
@@ -2043,9 +2047,7 @@ dependencies = [
 
 [[package]]
 name = "swiftide-macros"
-version = "0.11.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2f895f84ff3454d94c2d64e499a5410bb29ebdea9b8df61a515a345060755f78"
+version = "0.12.0"
 dependencies = [
  "darling",
  "proc-macro2",
@@ -2055,9 +2057,7 @@ dependencies = [
 
 [[package]]
 name = "swiftide-query"
-version = "0.11.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "346a1ca8dd9f2db0edd0314fe3b2215059f76bff2091f0317593a38650194041"
+version = "0.12.0"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2178,9 +2178,9 @@ checksum = "1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20"
 
 [[package]]
 name = "tokio"
-version = "1.39.2"
+version = "1.40.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "daa4fb1bc778bd6f04cbfc4bb2d06a7396a8f299dc33ea1900cedaa316f467b1"
+checksum = "e2b070231665d27ad9ec9b8df639893f46727666c6767db40317fbe920a5d998"
 dependencies = [
  "backtrace",
  "bytes",
@@ -2377,62 +2377,70 @@ dependencies = [
 
 [[package]]
 name = "tree-sitter"
-version = "0.22.6"
+version = "0.23.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "df7cc499ceadd4dcdf7ec6d4cbc34ece92c3fa07821e287aedecd4416c516dca"
+checksum = "20f4cd3642c47a85052a887d86704f4eac272969f61b686bdd3f772122aabaff"
 dependencies = [
  "cc",
  "regex",
+ "regex-syntax",
+ "tree-sitter-language",
 ]
 
 [[package]]
 name = "tree-sitter-javascript"
-version = "0.21.4"
+version = "0.23.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8710a71bc6779e33811a8067bdda3ed08bed1733296ff915e44faf60f8c533d7"
+checksum = "59e1f62f8babb640b909f30675d1addeb1f17802f2a4d2af287569753b243977"
 dependencies = [
  "cc",
- "tree-sitter",
+ "tree-sitter-language",
 ]
 
 [[package]]
-name = "tree-sitter-python"
-version = "0.21.0"
+name = "tree-sitter-language"
+version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b4066c6cf678f962f8c2c4561f205945c84834cce73d981e71392624fdc390a9"
+checksum = "2545046bd1473dac6c626659cc2567c6c0ff302fc8b84a56c4243378276f7f57"
+
+[[package]]
+name = "tree-sitter-python"
+version = "0.23.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "65661b1a3e24139e2e54207e47d910ab07e28790d78efc7d5dc3a11ce2a110eb"
 dependencies = [
  "cc",
- "tree-sitter",
+ "tree-sitter-language",
 ]
 
 [[package]]
 name = "tree-sitter-ruby"
-version = "0.21.0"
+version = "0.23.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c0031f687c0772f2dad7b77104c43428611099a1804c81244ada21560f41f0b1"
+checksum = "6ec5ee842e27791e0adffa0b2a177614de51d2a26e5c7e84d014ed7f097e5ed0"
 dependencies = [
  "cc",
- "tree-sitter",
+ "tree-sitter-language",
 ]
 
 [[package]]
 name = "tree-sitter-rust"
-version = "0.21.2"
+version = "0.23.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "277690f420bf90741dea984f3da038ace46c4fe6047cba57a66822226cde1c93"
+checksum = "cffbbcb780348fbae8395742ae5b34c1fd794e4085d43aac9f259387f9a84dc8"
 dependencies = [
  "cc",
- "tree-sitter",
+ "tree-sitter-language",
 ]
 
 [[package]]
 name = "tree-sitter-typescript"
-version = "0.21.2"
+version = "0.23.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ecb35d98a688378e56c18c9c159824fd16f730ccbea19aacf4f206e5d5438ed9"
+checksum = "aecf1585ae2a9dddc2b1d4c0e2140b2ec9876e2a25fd79de47fcf7dae0384685"
 dependencies = [
  "cc",
- "tree-sitter",
+ "tree-sitter-language",
 ]
 
 [[package]]
