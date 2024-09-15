@@ -1,3 +1,4 @@
+use serde_json::json;
 use swiftide::{
     indexing::{
         loaders::FileLoader,
@@ -8,6 +9,7 @@ use swiftide::{
         answers::Simple,
         evaluators::{self, ragas::EvaluationDataSet},
         query_transformers::{self, GenerateSubquestions},
+        search_strategies::{HybridSearch, SimilaritySingleEmbedding},
     },
 };
 
@@ -40,13 +42,16 @@ struct Args {
     /// Records answers as ground truth
     record_ground_truth: bool,
 
+    #[arg(short, long, default_value = "false")]
+    generate_questions: bool,
+
     #[arg(short, long)]
     /// Output file to write the evaluation results to
     output: PathBuf,
 }
 
 #[derive(clap::Args, Debug, Clone)]
-#[group(required = true, multiple = false)]
+#[group(multiple = false)]
 struct DatasetArg {
     /// Dataset json file to load questions and ground truths from
     #[arg(short, long, conflicts_with = "questions")]
@@ -58,6 +63,8 @@ struct DatasetArg {
 struct Context {
     openai: OpenAI,
     qdrant: Qdrant,
+    dir_name: String,
+    lang: String,
 }
 
 #[tokio::main]
@@ -76,15 +83,35 @@ async fn main() -> Result<()> {
     let qdrant = Qdrant::builder()
         .vector_size(1536)
         .collection_name(COLLECTION_NAME)
+        .batch_size(50)
         .build()?;
 
-    let context = Context { openai, qdrant };
+    let context = Context {
+        dir_name: args
+            .path
+            .file_name()
+            .unwrap_or_default()
+            .to_string_lossy()
+            .to_string(),
+        lang: args.language.clone(),
+        openai,
+        qdrant,
+    };
 
     // Delete the collection if it already exists
     force_delete_qdrant_collection(&context).await?;
 
     // Index the code
     index_all(&args.language, &args.path, &context).await?;
+
+    if args.generate_questions {
+        let questions = generate_questions(&context, 100).await.unwrap();
+        let json = json!({
+            "questions": questions
+        });
+        std::fs::write(args.output, json.to_string()).unwrap();
+        return Ok(());
+    }
 
     // Either load the dataset from a file or use the questions provided
     // Then create the evaluation dataset to be used
@@ -134,10 +161,10 @@ async fn index_all(language: &str, path: &PathBuf, context: &Context) -> Result<
             // fairly high and double the chunk size
             .then_chunk(ChunkCode::try_for_language_and_chunk_size(
                 language,
-                50..1024,
+                50..2048,
             )?);
 
-        markdown = markdown.then_chunk(ChunkMarkdown::from_chunk_range(50..1024));
+        markdown = markdown.then_chunk(ChunkMarkdown::from_chunk_range(50..2048));
     }
 
     if cfg!(feature = "metadata") {
@@ -148,6 +175,8 @@ async fn index_all(language: &str, path: &PathBuf, context: &Context) -> Result<
     // Merge both pipelines and generate embeddings
     code.merge(markdown)
         .then_in_batch(50, Embed::new(context.openai.clone()))
+        .log_errors()
+        .filter_errors()
         .then_store_with(context.qdrant.clone())
         .run()
         .await
@@ -183,6 +212,53 @@ async fn query(
     }
 
     Ok(ragas)
+}
+
+/// Generates questions based on the indexed data
+async fn generate_questions(context: &Context, num_questions: usize) -> Result<Vec<String>> {
+    let search_strategy: SimilaritySingleEmbedding<()> = SimilaritySingleEmbedding::default()
+        .with_top_k(20)
+        .to_owned();
+
+    let mut pipeline = query::Pipeline::from_search_strategy(search_strategy)
+        .then_transform_query(GenerateSubquestions::from_client(context.openai.clone()))
+        .then_transform_query(query_transformers::Embed::from_client(
+            context.openai.clone(),
+        ))
+        .then_retrieve(context.qdrant.clone())
+        .then_answer(Simple::from_client(context.openai.clone()));
+
+    let project_description = pipeline
+        .query_mut(format!("What is the {} project written in {} about? Provide an elaborate answer with examples.", &context.dir_name, &context.lang))
+        .await?
+        .answer()
+        .to_string();
+
+    println!("{}", &project_description);
+
+    pipeline.query(indoc::formatdoc! {"
+        Your goal is to generate {num_questions} questions about the given project description. Questions can be about the project, how different parts can be used, features, architecture, testing, dependencies, and so on.
+
+        # Requirements
+        * Only respond with the questions, separated by a new line with no other text.
+        * Questions should be varied and concise
+        * Provide a balance of technical questions, and questions that explore the meaning and
+            usage of the project
+        * Questions must be a single line, and each question should be separated by a newline.
+        * Questions can not include markdown
+        * Respond only with the list of questions
+
+        # Example response
+
+        <question 1>?
+        <question 2>?
+
+        ---
+
+        # Project description
+        {project_description}
+        
+    "}).await.map(|answered_query| answered_query.answer().split("\n").map(Into::into).collect::<Vec<_>>() )
 }
 
 async fn force_delete_qdrant_collection(context: &Context) -> Result<()> {
